@@ -22,7 +22,8 @@ import { Message } from '../components/chat/Message';
 import { Composer } from '../components/chat/Composer';
 import { MessageSkeleton } from '../components/ui/Skeleton';
 import { SearchModal } from '../components/modals/SearchModal';
-import type { Message as MessageType } from '@teamlink/shared/types';
+import { ThreadPanel } from '../components/chat/ThreadPanel';
+import type { Message as MessageType, User } from '@teamlink/shared/types';
 
 export default function HomePage() {
   const {
@@ -42,6 +43,8 @@ export default function HomePage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
+  const [threadMessage, setThreadMessage] = useState<MessageType | null>(null);
+  const [threadAuthor, setThreadAuthor] = useState<User | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -149,6 +152,28 @@ export default function HomePage() {
     setTyping(activeChannelId || null, activeDMId || null, currentUser.id, false);
   }, [activeChannelId, activeDMId, currentUser.id, setTyping]);
 
+  const handleThreadReply = useCallback((content: string) => {
+    if (!threadMessage) return;
+    const newMessage: MessageType = {
+      id: uuidv4(),
+      channelId: threadMessage.channelId,
+      threadId: threadMessage.id,
+      authorId: currentUser.id,
+      content,
+      attachments: [],
+      mentions: [],
+      reactions: [],
+      replyCount: 0,
+      replyAuthors: [],
+      isEdited: false,
+      editedAt: null,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    addMessage(threadMessage.channelId, newMessage);
+  }, [threadMessage, currentUser.id, addMessage]);
+
   const dmUsersWithIds = directMessages.map((dm) => ({
     dmId: dm.id,
     user: users.find((u) => u.id !== currentUser.id && dm.participants.includes(u.id))!,
@@ -239,7 +264,10 @@ export default function HomePage() {
                             isGrouped={!isFirstInGroup}
                             isOwn={msg.authorId === currentUser.id}
                             onReact={(emoji) => handleReaction(msg.id, emoji)}
-                            onReply={() => {}}
+                            onReply={() => {
+                              setThreadMessage(msg);
+                              setThreadAuthor(group.author);
+                            }}
                             onEdit={() => {}}
                             onDelete={() => {}}
                           />
@@ -285,6 +313,27 @@ export default function HomePage() {
         onClose={() => setShowSearch(false)}
         workspaceId={workspace.id}
       />
+
+      {/* Thread Panel */}
+      {threadMessage && threadAuthor && (
+        <ThreadPanel
+          parentMessage={threadMessage}
+          author={threadAuthor}
+          currentUserId={currentUser.id}
+          threadMessages={[]}
+          onClose={() => {
+            setThreadMessage(null);
+            setThreadAuthor(null);
+          }}
+          onSendMessage={handleThreadReply}
+          onReact={(messageId, emoji) => {
+            if (threadMessage) {
+              addReaction(threadMessage.channelId, messageId, emoji, currentUser.id);
+            }
+          }}
+          users={useChatStore.getState().users}
+        />
+      )}
     </div>
   );
 }

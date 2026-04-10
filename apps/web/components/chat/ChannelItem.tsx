@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { clsx } from 'clsx';
-import { Hash, Lock, Users } from 'lucide-react';
-import type { Channel, DirectMessage, User, PresenceStatus } from '@teamlink/shared/types';
+import { Hash, Lock } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
+import type { Channel, User } from '@teamlink/shared/types';
 
 interface ChannelItemProps {
   channel: Channel;
@@ -90,8 +91,6 @@ interface DMItemProps {
 }
 
 export function DMItem({ user, isActive = false, unreadCount = 0, onClick }: DMItemProps) {
-  const { Avatar } = require('../ui/Avatar');
-
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
