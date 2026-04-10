@@ -1,26 +1,25 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Paperclip, AtSign, Smile } from 'lucide-react';
+import { Send, Paperclip, Smile } from 'lucide-react';
+import { MentionAutocomplete } from './MentionAutocomplete';
 
 interface ComposerProps {
   onSend: (content: string) => void;
-  placeholder?: string;
   disabled?: boolean;
   onTyping?: () => void;
   onStopTyping?: () => void;
+  onMention?: (userId: string, username: string) => void;
 }
 
 export function Composer({
   onSend,
-  placeholder = 'Type a message...',
   disabled = false,
   onTyping,
   onStopTyping,
+  onMention,
 }: ComposerProps) {
   const [content, setContent] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -31,15 +30,8 @@ export function Composer({
     };
   }, []);
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
-    }
-  }, [content]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+  const handleChange = (newContent: string) => {
+    setContent(newContent);
     if (onTyping) {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -59,16 +51,8 @@ export function Composer({
         clearTimeout(typingTimeoutRef.current);
       }
       onStopTyping?.();
-      textareaRef.current?.focus();
     }
   }, [content, disabled, onSend, onStopTyping]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
 
   return (
     <div className="flex items-end gap-2 px-4 py-3 bg-white border-t border-gray-200 min-h-14">
@@ -80,26 +64,12 @@ export function Composer({
         <Paperclip size={20} />
       </button>
 
-      <textarea
-        ref={textareaRef}
+      <MentionAutocomplete
         value={content}
         onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        onMention={onMention || (() => {})}
         disabled={disabled}
-        rows={1}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        className="flex-1 min-h-6 max-h-48 py-2 px-3 border border-gray-200 rounded-lg text-sm font-inherit text-gray-900 bg-white outline-none resize-none leading-6 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
       />
-
-      <button
-        disabled={disabled}
-        aria-label="Insert mention"
-        className="flex items-center justify-center w-9 h-9 border-none bg-transparent rounded-lg cursor-pointer text-gray-500 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
-      >
-        <AtSign size={20} />
-      </button>
 
       <button
         disabled={disabled}
