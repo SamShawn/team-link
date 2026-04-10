@@ -53,3 +53,27 @@
 .active .dmName {
   font-weight: var(--font-weight-medium);
 }
+
+.callBtn {
+  margin-left: auto;
+  padding: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.item:hover .callBtn {
+  opacity: 1;
+}
+
+.callBtn:hover {
+  color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}

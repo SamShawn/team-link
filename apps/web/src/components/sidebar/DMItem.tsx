@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Phone } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { DirectMessage } from '@teamlink/shared/types';
 import { useUser, useActiveDMId, useChatStore } from '@/stores/chatStore';
@@ -14,6 +15,7 @@ interface DMItemProps {
 function DMItem({ dm, excludeUserId }: DMItemProps) {
   const activeDMId = useActiveDMId();
   const setActiveDM = useChatStore((s) => s.setActiveDM);
+  const startCall = useChatStore((s) => s.startCall);
   const otherUserId = dm.participants.find((p) => p !== excludeUserId) ?? excludeUserId;
   const otherUser = useUser(otherUserId);
 
@@ -32,6 +34,16 @@ function DMItem({ dm, excludeUserId }: DMItemProps) {
         showStatus
       />
       <span className={styles.dmName}>{otherUser.displayName}</span>
+      <button
+        className={styles.callBtn}
+        onClick={(e) => {
+          e.stopPropagation();
+          startCall(otherUserId);
+        }}
+        aria-label="Start call"
+      >
+        <Phone size={14} />
+      </button>
     </button>
   );
 }

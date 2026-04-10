@@ -16,6 +16,8 @@ import styles from './page.module.css';
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const setSearchModalOpen = useChatStore((s) => s.setSearchModalOpen);
+  const callState = useChatStore((s) => s.callState);
+  const callActive = callState.status === 'active';
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -23,6 +25,10 @@ export default function Home() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setSearchModalOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        // Cmd+Shift+C to start call - handled by individual DM call buttons
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -56,13 +62,19 @@ export default function Home() {
         <DMSidebar />
       </div>
 
-      {/* Main message area */}
-      <main className={styles.main}>
-        <div className={styles.messageArea}>
-          <MessageList />
-          <Composer />
-        </div>
-      </main>
+      {/* Main area with optional call panel */}
+      <div className={`${styles.mainArea} ${callActive ? styles.withCallPanel : ''}`}>
+        {/* Main message area */}
+        <main className={styles.main}>
+          <div className={styles.messageArea}>
+            <MessageList />
+            <Composer />
+          </div>
+        </main>
+
+        {/* Call panel - shown alongside message area when active */}
+        {callActive && <CallPanel />}
+      </div>
 
       {/* Thread panel */}
       <ThreadPanel />
@@ -70,9 +82,8 @@ export default function Home() {
       {/* Search modal */}
       <SearchModal />
 
-      {/* Call UI */}
+      {/* Incoming call overlay */}
       <IncomingCallOverlay />
-      <CallPanel />
     </div>
   );
 }
