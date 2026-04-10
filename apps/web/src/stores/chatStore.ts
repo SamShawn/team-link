@@ -163,10 +163,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
 export const useActiveChannelId = () => useChatStore((s) => s.activeChannelId);
 export const useActiveDMId = () => useChatStore((s) => s.activeDMId);
 export const useThreadParentId = () => useChatStore((s) => s.threadParentId);
+
+// Stable empty arrays to prevent infinite loops in React 18 concurrent mode
+const EMPTY_MESSAGES: Message[] = [];
+const EMPTY_TYPING_USERS: string[] = [];
+
 export const useMessagesForChannel = (channelId: string | null) =>
-  useChatStore((s) => (channelId ? s.messages[channelId] ?? [] : []));
+  useChatStore((s) => (channelId ? s.messages[channelId] ?? EMPTY_MESSAGES : EMPTY_MESSAGES));
 export const useTypingUsersForChannel = (channelId: string | null) =>
-  useChatStore((s) => (channelId ? s.typingUsers[channelId] ?? [] : []));
+  useChatStore((s) => (channelId ? s.typingUsers[channelId] ?? EMPTY_TYPING_USERS : EMPTY_TYPING_USERS));
 export const useChannel = (id: string | null) => useChatStore((s) => s.channels.find((c) => c.id === id) ?? null);
 export const useDM = (id: string | null) => useChatStore((s) => s.directMessages.find((d) => d.id === id) ?? null);
 export const useUser = (id: string | null) => useChatStore((s) => (id ? s.users[id] : undefined));

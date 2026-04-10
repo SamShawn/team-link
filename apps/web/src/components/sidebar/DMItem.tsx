@@ -22,9 +22,17 @@ function DMItem({ dm, excludeUserId }: DMItemProps) {
   if (!otherUser) return null;
 
   return (
-    <button
+    <div
       className={`${styles.item} ${activeDMId === dm.id ? styles.active : ''}`}
       onClick={() => setActiveDM(dm.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setActiveDM(dm.id);
+        }
+      }}
     >
       <Avatar
         src={otherUser.avatarUrl}
@@ -44,7 +52,7 @@ function DMItem({ dm, excludeUserId }: DMItemProps) {
       >
         <Phone size={14} />
       </button>
-    </button>
+    </div>
   );
 }
 

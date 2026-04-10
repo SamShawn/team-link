@@ -36,5 +36,7 @@ Thumbs.db
 # Testing
 coverage
 
+.claude
+.remember
 .superpowers
 .worktrees

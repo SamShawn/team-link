@@ -15,7 +15,6 @@ import styles from './page.module.css';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const setSearchModalOpen = useChatStore((s) => s.setSearchModalOpen);
   const callState = useChatStore((s) => s.callState);
   const callActive = callState.status === 'active';
 
@@ -24,7 +23,7 @@ export default function Home() {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchModalOpen(true);
+        useChatStore.getState().setSearchModalOpen(true);
       }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
         e.preventDefault();
@@ -33,7 +32,7 @@ export default function Home() {
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [setSearchModalOpen]);
+  }, []);
 
   return (
     <div className={styles.layout}>
