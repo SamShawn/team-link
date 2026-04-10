@@ -6,6 +6,7 @@ import { WorkspaceSidebar } from '@/components/sidebar/WorkspaceSidebar';
 import { ChannelSidebar } from '@/components/sidebar/ChannelSidebar';
 import { DMSidebar } from '@/components/sidebar/DMSidebar';
 import { MessageList, Composer } from '@/components/chat';
+import { ThreadPanel } from '@/components/thread';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -45,6 +46,9 @@ export default function Home() {
           <Composer />
         </div>
       </main>
+
+      {/* Thread panel */}
+      <ThreadPanel />
     </div>
   );
 }
