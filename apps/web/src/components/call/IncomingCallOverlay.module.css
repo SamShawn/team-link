@@ -1,0 +1,70 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 238, 230, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.callerName {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.callType {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.declineBtn,
+.acceptBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.declineBtn {
+  background-color: var(--color-surface);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.declineBtn:hover {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+.acceptBtn {
+  background-color: var(--color-cta);
+  color: var(--color-text-inverse);
+}
+
+.acceptBtn:hover {
+  background-color: var(--color-cta-hover);
+}

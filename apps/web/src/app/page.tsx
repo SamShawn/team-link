@@ -8,6 +8,8 @@ import { DMSidebar } from '@/components/sidebar/DMSidebar';
 import { MessageList, Composer } from '@/components/chat';
 import { ThreadPanel } from '@/components/thread';
 import { SearchModal } from '@/components/search';
+import { CallPanel } from '@/components/call/CallPanel';
+import { IncomingCallOverlay } from '@/components/call/IncomingCallOverlay';
 import { useChatStore } from '@/stores/chatStore';
 import styles from './page.module.css';
 
@@ -67,6 +69,10 @@ export default function Home() {
 
       {/* Search modal */}
       <SearchModal />
+
+      {/* Call UI */}
+      <IncomingCallOverlay />
+      <CallPanel />
     </div>
   );
 }

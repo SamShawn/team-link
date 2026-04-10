@@ -1,0 +1,45 @@
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+  background-color: var(--color-surface-hover);
+  transform: scale(1.05);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.active {
+  background-color: var(--color-surface-active);
+  color: var(--color-cta);
+}
+
+.endCall {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+.endCall:hover {
+  background-color: #c05858;
+}
