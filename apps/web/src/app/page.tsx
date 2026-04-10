@@ -1,16 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { WorkspaceSidebar } from '@/components/sidebar/WorkspaceSidebar';
 import { ChannelSidebar } from '@/components/sidebar/ChannelSidebar';
 import { DMSidebar } from '@/components/sidebar/DMSidebar';
 import { MessageList, Composer } from '@/components/chat';
 import { ThreadPanel } from '@/components/thread';
+import { SearchModal } from '@/components/search';
+import { useChatStore } from '@/stores/chatStore';
 import styles from './page.module.css';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const setSearchModalOpen = useChatStore((s) => s.setSearchModalOpen);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchModalOpen(true);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [setSearchModalOpen]);
 
   return (
     <div className={styles.layout}>
@@ -49,6 +64,9 @@ export default function Home() {
 
       {/* Thread panel */}
       <ThreadPanel />
+
+      {/* Search modal */}
+      <SearchModal />
     </div>
   );
 }
