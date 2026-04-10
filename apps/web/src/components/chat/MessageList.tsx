@@ -21,6 +21,10 @@ function DateSeparator({ date }: { date: Date }) {
   );
 }
 
+type Item =
+  | { type: 'date'; date: Date }
+  | { type: 'message'; message: ReturnType<typeof useMessagesForChannel>[number]; isGrouped: boolean };
+
 export function MessageList() {
   const channelId = useActiveChannelId();
   const messages = useMessagesForChannel(channelId);
@@ -28,20 +32,39 @@ export function MessageList() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showNewMessagesBtn, setShowNewMessagesBtn] = useState(false);
 
+  // Build items list: date separators + messages interleaved
+  const items: Item[] = [];
+  let lastDate: Date | null = null;
+
+  messages.forEach((msg, idx) => {
+    const msgDate = new Date(msg.createdAt);
+    if (!lastDate || !isSameDay(lastDate, msgDate)) {
+      items.push({ type: 'date', date: msgDate });
+      lastDate = msgDate;
+    }
+    const prevMsg = messages[idx - 1];
+    const isGrouped =
+      !!prevMsg &&
+      prevMsg.authorId === msg.authorId &&
+      new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000;
+    items.push({ type: 'message', message: msg, isGrouped });
+  });
+
   const virtualizer = useVirtualizer({
-    count: messages.length,
+    count: items.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 80,
+    estimateSize: (index) => {
+      // Date separators are smaller
+      return items[index]?.type === 'date' ? 40 : 80;
+    },
     overscan: 5,
   });
 
   useEffect(() => {
     if (isAtBottom && containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    } else if (!isAtBottom) {
-      setShowNewMessagesBtn(true);
     }
-  }, [messages.length]);
+  }, [messages.length, isAtBottom]);
 
   function handleScroll() {
     if (!containerRef.current) return;
@@ -59,58 +82,37 @@ export function MessageList() {
     }
   }
 
-  // Determine grouping and date separators
-  const items: Array<{ type: 'message' | 'date'; messageIdx?: number; date?: Date }> = [];
-  let lastDate: Date | null = null;
-
-  messages.forEach((msg, idx) => {
-    const msgDate = new Date(msg.createdAt);
-    if (!lastDate || !isSameDay(lastDate, msgDate)) {
-      items.push({ type: 'date', date: msgDate });
-      lastDate = msgDate;
-    }
-    const prevMsg = messages[idx - 1];
-    const isGrouped =
-      prevMsg &&
-      prevMsg.authorId === msg.authorId &&
-      new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000;
-    items.push({ type: 'message', messageIdx: idx });
-  });
-
   return (
     <div className={styles.container} ref={containerRef} onScroll={handleScroll}>
-      <div className={styles.virtualList} style={{ height: `${virtualizer.getTotalSize()}px` }}>
+      <div
+        className={styles.virtualList}
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const item = items[virtualRow.index];
-          if (item.type === 'date' && item.date) {
+          const top = virtualRow.start;
+
+          if (item.type === 'date') {
             return (
               <div
                 key={`date-${item.date.toISOString()}`}
                 className={styles.virtualItem}
-                style={{ transform: `translateY(${virtualRow.start}px)` }}
+                style={{ transform: `translateY(${top}px)` }}
               >
                 <DateSeparator date={item.date} />
               </div>
             );
           }
-          if (item.type === 'message' && item.messageIdx !== undefined) {
-            const msg = messages[item.messageIdx];
-            const prevMsg = messages[item.messageIdx - 1];
-            const isGrouped =
-              prevMsg &&
-              prevMsg.authorId === msg.authorId &&
-              new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000;
-            return (
-              <div
-                key={msg.id}
-                className={styles.virtualItem}
-                style={{ transform: `translateY(${virtualRow.start}px)` }}
-              >
-                <MessageBubble message={msg} isGrouped={isGrouped} />
-              </div>
-            );
-          }
-          return null;
+
+          return (
+            <div
+              key={item.message.id}
+              className={styles.virtualItem}
+              style={{ transform: `translateY(${top}px)` }}
+            >
+              <MessageBubble message={item.message} isGrouped={item.isGrouped} />
+            </div>
+          );
         })}
       </div>
 
