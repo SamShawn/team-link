@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CallControls } from './CallControls';
 import { Avatar } from '@/components/ui';
 import { useCallState, useChatStore } from '@/stores/chatStore';
+import { CURRENT_USER_ID } from '@/lib/mockData';
 import styles from './CallPanel.module.css';
 
 export function CallPanel() {
@@ -17,6 +18,7 @@ export function CallPanel() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const remoteUser = users[callState.callerId ?? ''];
+  const currentUser = users[CURRENT_USER_ID];
 
   if (callState.status !== 'active') return null;
 
@@ -51,8 +53,8 @@ export function CallPanel() {
         {/* Local video - small PiP */}
         <div className={styles.localVideo}>
           <Avatar
-            src={remoteUser?.avatarUrl}
-            name={remoteUser?.displayName ?? 'You'}
+            src={currentUser?.avatarUrl}
+            name={currentUser?.displayName ?? 'You'}
             size="lg"
           />
         </div>

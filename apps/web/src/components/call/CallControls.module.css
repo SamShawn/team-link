@@ -41,5 +41,5 @@
 }
 
 .endCall:hover {
-  background-color: #c05858;
+  background-color: var(--color-error);
 }
