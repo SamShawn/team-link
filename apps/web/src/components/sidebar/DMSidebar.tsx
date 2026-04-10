@@ -10,13 +10,18 @@ export function DMSidebar() {
   const activeDMId = useActiveDMId();
   const setActiveDM = useChatStore((s) => s.setActiveDM);
 
+  // Resolve all other participant user IDs upfront (hooks at top level)
+  const dmUsers = dms.map((dm) => {
+    const otherUserId = dm.participants.find((p) => p !== 'user-1') ?? 'user-2';
+    const otherUser = useUser(otherUserId);
+    return { dm, otherUser };
+  });
+
   return (
     <div className={styles.dmSection}>
       <div className={styles.sectionHeader}>Direct Messages</div>
       <div className={styles.list}>
-        {dms.map((dm) => {
-          const otherUserId = dm.participants.find((p) => p !== 'user-1') ?? 'user-2';
-          const otherUser = useUser(otherUserId);
+        {dmUsers.map(({ dm, otherUser }) => {
           if (!otherUser) return null;
           return (
             <button
@@ -24,7 +29,13 @@ export function DMSidebar() {
               className={`${styles.item} ${activeDMId === dm.id ? styles.active : ''}`}
               onClick={() => setActiveDM(dm.id)}
             >
-              <Avatar src={otherUser.avatarUrl} name={otherUser.displayName} size="sm" status={otherUser.status} showStatus />
+              <Avatar
+                src={otherUser.avatarUrl}
+                name={otherUser.displayName}
+                size="sm"
+                status={otherUser.status}
+                showStatus
+              />
               <span className={styles.dmName}>{otherUser.displayName}</span>
             </button>
           );
