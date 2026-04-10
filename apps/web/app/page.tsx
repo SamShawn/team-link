@@ -21,6 +21,7 @@ import { Header } from '../components/navigation/Header';
 import { Message } from '../components/chat/Message';
 import { Composer } from '../components/chat/Composer';
 import { MessageSkeleton } from '../components/ui/Skeleton';
+import { SearchModal } from '../components/modals/SearchModal';
 import type { Message as MessageType } from '@teamlink/shared/types';
 
 export default function HomePage() {
@@ -43,6 +44,19 @@ export default function HomePage() {
   const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K or Ctrl+K to open search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -264,6 +278,13 @@ export default function HomePage() {
           onStopTyping={handleStopTyping}
         />
       </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        workspaceId={workspace.id}
+      />
     </div>
   );
 }
