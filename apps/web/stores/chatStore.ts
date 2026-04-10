@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Channel, Message, User, PresenceStatus, TypingIndicator, DirectMessage } from '@teamlink/shared/types';
+import type { Channel, Message, User, PresenceStatus, DirectMessage } from '@teamlink/shared/types';
 
 interface ChatState {
   // Active selections
@@ -195,3 +195,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setCurrentUser: (userId) => set({ currentUserId: userId }),
 }));
+
+// Selective hooks to prevent unnecessary re-renders
+// Use these instead of useChatStore() for specific slices of state
+
+export const useActiveChannelId = () => useChatStore((state) => state.activeChannelId);
+export const useActiveDMId = () => useChatStore((state) => state.activeDMId);
+
+export const useMessagesForChannel = (channelId: string | null | undefined) =>
+  useChatStore((state) => (channelId ? state.messages.get(channelId) || [] : []));
+
+export const useTypingUsersForChannel = (channelId: string | null | undefined) =>
+  useChatStore((state) => (channelId ? state.typingUsers.get(channelId) || [] : []));
+
+export const useChannel = (channelId: string | null | undefined) =>
+  useChatStore((state) => (channelId ? state.channels.get(channelId) : undefined));
+
+export const useUser = (userId: string | null | undefined) =>
+  useChatStore((state) => (userId ? state.users.get(userId) : undefined));
+
+export const useUsersMap = () => useChatStore((state) => state.users);
+export const useChannelsMap = () => useChatStore((state) => state.channels);
+export const usePresenceMap = () => useChatStore((state) => state.presence);
