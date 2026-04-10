@@ -35,6 +35,7 @@ export default function HomePage() {
     setMessages,
     addMessage,
     addReaction,
+    updateMessage,
     setUsers,
     setChannels,
     messages,
@@ -186,6 +187,10 @@ export default function HomePage() {
     addReaction(activeChannelId || activeDMId || '', messageId, emoji, currentUser.id);
   }, [activeChannelId, activeDMId, currentUser.id, addReaction]);
 
+  const handleEdit = useCallback((messageId: string, content: string) => {
+    updateMessage(activeChannelId || activeDMId || '', messageId, { content, isEdited: true, editedAt: new Date() });
+  }, [activeChannelId, activeDMId, updateMessage]);
+
   const handleTyping = useCallback(() => {
     setTyping(activeChannelId || null, activeDMId || null, currentUser.id, true);
   }, [activeChannelId, activeDMId, currentUser.id, setTyping]);
@@ -310,7 +315,7 @@ export default function HomePage() {
                               setThreadMessage(msg);
                               setThreadAuthor(group.author);
                             }}
-                            onEdit={() => {}}
+                            onEdit={(content) => handleEdit(msg.id, content)}
                             onDelete={() => {}}
                           />
                         );

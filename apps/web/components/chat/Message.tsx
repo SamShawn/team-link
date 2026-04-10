@@ -1,9 +1,9 @@
 /* eslint-disable react/no-danger */
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import DOMPurify from 'dompurify';
-import { MoreHorizontal, Smile, Reply, Edit2, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Smile, Reply, Edit2, Trash2, Check, X } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Dropdown } from '../ui/Dropdown';
 import type { Message as MessageType, User } from '@teamlink/shared/types';
@@ -18,7 +18,7 @@ interface MessageProps {
   showActions?: boolean;
   onReact?: (emoji: string) => void;
   onReply?: () => void;
-  onEdit?: () => void;
+  onEdit?: (content: string) => void;
   onDelete?: () => void;
   isOwn?: boolean;
 }
@@ -49,6 +49,16 @@ export const Message = React.memo(function Message({
 }: MessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isEditing && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.setSelectionRange(editContent.length, editContent.length);
+    }
+  }, [isEditing, editContent]);
 
   const formattedTime = useMemo(
     () => formatDistanceToNow(new Date(message.createdAt), { addSuffix: false }),
@@ -65,6 +75,23 @@ export const Message = React.memo(function Message({
     onReact?.(emoji);
     setShowReactionPicker(false);
   }, [onReact]);
+
+  const handleEditStart = useCallback(() => {
+    setEditContent(message.content);
+    setIsEditing(true);
+  }, [message.content]);
+
+  const handleEditCancel = useCallback(() => {
+    setEditContent(message.content);
+    setIsEditing(false);
+  }, [message.content]);
+
+  const handleEditSave = useCallback(() => {
+    if (editContent.trim() && editContent !== message.content) {
+      onEdit?.(editContent.trim());
+    }
+    setIsEditing(false);
+  }, [editContent, message.content, onEdit]);
 
   return (
     <div
@@ -116,7 +143,7 @@ export const Message = React.memo(function Message({
                   id: 'edit',
                   label: 'Edit',
                   icon: <Edit2 size={16} />,
-                  onClick: () => onEdit?.(),
+                  onClick: handleEditStart,
                 },
                 {
                   id: 'delete',
@@ -180,6 +207,40 @@ export const Message = React.memo(function Message({
           {/* Content */}
           {message.isDeleted ? (
             <p className="text-sm text-gray-400 italic">This message was deleted</p>
+          ) : isEditing ? (
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={editInputRef}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleEditSave();
+                  } else if (e.key === 'Escape') {
+                    handleEditCancel();
+                  }
+                }}
+                className="flex-1 p-2 border border-indigo-500 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+                rows={2}
+              />
+              <div className="flex gap-1">
+                <button
+                  onClick={handleEditSave}
+                  className="p-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  aria-label="Save edit"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  onClick={handleEditCancel}
+                  className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  aria-label="Cancel edit"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
           ) : (
             <p
               className="text-sm leading-relaxed text-gray-700 break-words"
