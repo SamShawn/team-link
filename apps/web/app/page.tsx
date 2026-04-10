@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { v4 as uuidv4 } from 'uuid';
 import { useChatStore } from '../stores/chatStore';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import {
   workspace,
   channels,
@@ -48,18 +49,59 @@ export default function HomePage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Global keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K or Ctrl+K to open search
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowSearch(true);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Register keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'k',
+        meta: true,
+        handler: () => setShowSearch(true),
+        description: 'Open search',
+      },
+      {
+        key: 'k',
+        ctrl: true,
+        handler: () => setShowSearch(true),
+        description: 'Open search',
+      },
+      {
+        key: 'n',
+        meta: true,
+        handler: () => {
+          // Focus composer - handled by MentionAutocomplete
+        },
+        description: 'New message',
+      },
+      {
+        key: 'n',
+        ctrl: true,
+        handler: () => {},
+        description: 'New message',
+      },
+      {
+        key: ']',
+        ctrl: true,
+        handler: () => {
+          const currentIndex = channels.findIndex((c) => c.id === activeChannelId);
+          if (currentIndex < channels.length - 1) {
+            setActiveChannel(channels[currentIndex + 1].id);
+          }
+        },
+        description: 'Next channel',
+      },
+      {
+        key: '[',
+        ctrl: true,
+        handler: () => {
+          const currentIndex = channels.findIndex((c) => c.id === activeChannelId);
+          if (currentIndex > 0) {
+            setActiveChannel(channels[currentIndex - 1].id);
+          }
+        },
+        description: 'Previous channel',
+      },
+    ],
+  });
 
   // Initialize data
   useEffect(() => {
