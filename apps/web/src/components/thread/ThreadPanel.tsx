@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Message } from '@teamlink/shared/types';
@@ -16,14 +16,24 @@ export function ThreadPanel() {
   const messages = useChatStore((s) => s.messages);
   const channels = useChatStore((s) => s.channels);
 
-  // Find the parent message
+  // Escape key closes thread
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && threadParentId) {
+        closeThread();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [threadParentId, closeThread]);
+
+  // Find the parent message and thread replies
   let parentMessage: Message | null = null;
   let threadMessages: Message[] = [];
 
   if (threadParentId && activeChannelId) {
     const channelMessages = messages[activeChannelId] ?? [];
     parentMessage = channelMessages.find((m) => m.id === threadParentId) ?? null;
-    // Thread replies are messages with the same threadId
     threadMessages = channelMessages.filter((m) => m.threadId === threadParentId);
   }
 
@@ -35,6 +45,7 @@ export function ThreadPanel() {
         <>
           {/* Backdrop */}
           <motion.div
+            key={`backdrop-${threadParentId}`}
             className={styles.backdrop}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -45,6 +56,7 @@ export function ThreadPanel() {
 
           {/* Panel */}
           <motion.div
+            key={`panel-${threadParentId}`}
             className={styles.panel}
             initial={{ x: 380, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
