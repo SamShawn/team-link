@@ -1,0 +1,16 @@
+{
+  "name": "teamlink",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@teamlink/web",
+    "build": "npm run build --workspace=@teamlink/web",
+    "lint": "npm run lint --workspace=@teamlink/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
