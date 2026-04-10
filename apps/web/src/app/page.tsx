@@ -5,7 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { WorkspaceSidebar } from '@/components/sidebar/WorkspaceSidebar';
 import { ChannelSidebar } from '@/components/sidebar/ChannelSidebar';
 import { DMSidebar } from '@/components/sidebar/DMSidebar';
-import { MessageList } from '@/components/chat';
+import { MessageList, Composer } from '@/components/chat';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -42,6 +42,7 @@ export default function Home() {
       <main className={styles.main}>
         <div className={styles.messageArea}>
           <MessageList />
+          <Composer />
         </div>
       </main>
     </div>
