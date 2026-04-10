@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.13.23",
     "@teamlink/shared": "*",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

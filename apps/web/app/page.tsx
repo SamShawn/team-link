@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { v4 as uuidv4 } from 'uuid';
 import { useChatStore } from '../stores/chatStore';
 import {
@@ -41,6 +42,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
 
   // Initialize data
   useEffect(() => {
@@ -58,11 +60,6 @@ export default function HomePage() {
       setActiveChannel('ch-1');
     }
   }, [activeChannelId, activeDMId, setActiveChannel]);
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const activeChannel = activeChannelId
     ? channels.find((c) => c.id === activeChannelId)
@@ -89,6 +86,21 @@ export default function HomePage() {
     : activeDMId
     ? typingUsers.get(activeDMId) || []
     : [];
+
+  // Virtualizer for message groups
+  const virtualizer = useVirtualizer({
+    count: messageGroups.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 80, // Estimated height per message group
+    overscan: 5,
+  });
+
+  // Scroll to bottom when messages change or on initial load
+  useEffect(() => {
+    if (messageGroups.length > 0 && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messageGroups.length]);
 
   const handleSendMessage = useCallback((content: string) => {
     const newMessage: MessageType = {
@@ -129,14 +141,7 @@ export default function HomePage() {
   })).filter((d) => d.user);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        overflow: 'hidden',
-        background: '#FFFFFF',
-      }}
-    >
+    <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <Sidebar
         workspace={workspace}
@@ -152,7 +157,7 @@ export default function HomePage() {
       />
 
       {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="flex flex-1 flex-col min-w-0">
         {/* Header */}
         <Header
           workspace={workspace}
@@ -164,106 +169,80 @@ export default function HomePage() {
 
         {/* Message Area */}
         <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
+          ref={parentRef}
+          className="flex-1 overflow-y-auto"
         >
           {isLoading ? (
-            <div style={{ padding: '16px' }}>
+            <div className="p-4">
               <MessageSkeleton count={5} />
             </div>
           ) : currentMessages.length === 0 ? (
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#9CA3AF',
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '16px',
-                }}
-              >
+            <div className="flex flex-col items-center justify-center flex-1 text-gray-400">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-4">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </div>
-              <p style={{ fontSize: '15px', fontWeight: 500, color: '#374151', margin: 0 }}>
-                No messages yet
-              </p>
-              <p style={{ fontSize: '13px', margin: '4px 0 0' }}>
-                Be the first to say something!
-              </p>
+              <p className="text-sm font-medium text-gray-700 m-0">No messages yet</p>
+              <p className="text-xs mt-1">Be the first to say something!</p>
             </div>
           ) : (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column-reverse', padding: '8px 0' }}>
+            <div className="flex flex-col-reverse h-full">
               {/* Date separator for today */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '16px',
-                  gap: '16px',
-                }}
-              >
-                <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
-                <span style={{ fontSize: '11px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>
-                  Today
-                </span>
-                <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
+              <div className="flex items-center gap-4 px-4 py-4">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs font-medium text-gray-500 uppercase">Today</span>
+                <div className="flex-1 h-px bg-gray-200" />
               </div>
 
-              {messageGroups.map((group, groupIndex) => (
-                <div key={`${group.author.id}-${groupIndex}`}>
-                  {group.messages.map((msg, msgIndex) => {
-                    const isFirstInGroup = msgIndex === 0;
-                    const isLastInGroup = msgIndex === group.messages.length - 1;
-                    return (
-                      <div key={msg.id}>
-                        <Message
-                          message={msg}
-                          author={group.author}
-                          currentUserId={currentUser.id}
-                          isGrouped={!isFirstInGroup}
-                          isOwn={msg.authorId === currentUser.id}
-                          onReact={(emoji) => handleReaction(msg.id, emoji)}
-                          onReply={() => {}}
-                          onEdit={() => {}}
-                          onDelete={() => {}}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+              {/* Virtualized message groups */}
+              <div
+                className="relative w-full"
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                }}
+              >
+                {virtualizer.getVirtualItems().map((virtualRow) => {
+                  const group = messageGroups[virtualRow.index];
+                  return (
+                    <div
+                      key={`${group.author.id}-${virtualRow.index}`}
+                      data-index={virtualRow.index}
+                      ref={virtualizer.measureElement}
+                      className="absolute top-0 left-0 w-full"
+                      style={{
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      {group.messages.map((msg, msgIndex) => {
+                        const isFirstInGroup = msgIndex === 0;
+                        return (
+                          <Message
+                            key={msg.id}
+                            message={msg}
+                            author={group.author}
+                            currentUserId={currentUser.id}
+                            isGrouped={!isFirstInGroup}
+                            isOwn={msg.authorId === currentUser.id}
+                            onReact={(emoji) => handleReaction(msg.id, emoji)}
+                            onReply={() => {}}
+                            onEdit={() => {}}
+                            onDelete={() => {}}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+
               <div ref={messagesEndRef} />
             </div>
           )}
 
           {/* Typing indicator */}
           {currentTypingUsers.length > 0 && (
-            <div
-              style={{
-                padding: '4px 16px',
-                fontSize: '12px',
-                color: '#6B7280',
-                height: '24px',
-              }}
-            >
+            <div className="px-4 py-1 text-xs text-gray-500 h-6">
               {currentTypingUsers.length === 1
                 ? `${getUserById(currentTypingUsers[0])?.displayName || 'Someone'} is typing...`
                 : `${currentTypingUsers.length} people are typing...`}
