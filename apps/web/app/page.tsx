@@ -268,9 +268,9 @@ export default function HomePage() {
               <p className="text-xs mt-1">Be the first to say something!</p>
             </div>
           ) : (
-            <div className="flex flex-col-reverse h-full">
+            <div className="flex flex-col h-full">
               {/* Date separator for today */}
-              <div className="flex items-center gap-4 px-4 py-4">
+              <div className="flex items-center gap-4 px-4 py-4 shrink-0">
                 <div className="flex-1 h-px bg-gray-200" />
                 <span className="text-xs font-medium text-gray-500 uppercase">Today</span>
                 <div className="flex-1 h-px bg-gray-200" />
@@ -278,7 +278,7 @@ export default function HomePage() {
 
               {/* Virtualized message groups */}
               <div
-                className="relative w-full"
+                className="relative w-full flex-1"
                 style={{
                   height: `${virtualizer.getTotalSize()}px`,
                 }}
