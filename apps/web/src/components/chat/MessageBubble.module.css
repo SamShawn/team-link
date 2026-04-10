@@ -1,0 +1,240 @@
+.bubble {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-4);
+  position: relative;
+  transition: background-color var(--transition-fast);
+}
+
+.bubble:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.own .content {
+  background-color: var(--color-surface-active);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.grouped {
+  padding-left: calc(var(--space-4) + 32px + var(--space-3));
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.authorName {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.timestamp {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.edited {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.text {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.deletedText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.reactionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  background-color: var(--color-surface-hover);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--transition-fast);
+}
+
+.reactionPill:hover {
+  background-color: var(--color-border);
+}
+
+.reacted {
+  background-color: var(--color-surface-active);
+}
+
+.reactionCount {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.actionBar {
+  position: absolute;
+  top: -16px;
+  right: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  border: none;
+  background: none;
+}
+
+.actionBtn:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.deleteBtn:hover {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+.reactionPicker {
+  position: relative;
+}
+
+.reactionGrid {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-1);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-1);
+}
+
+.reactionPicker:hover .reactionGrid {
+  display: grid;
+}
+
+.emojiBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.emojiBtn:hover {
+  background-color: var(--color-surface-hover);
+  transform: scale(1.2);
+}
+
+.editContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.editTextarea {
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  resize: none;
+  outline: none;
+}
+
+.editTextarea:focus {
+  border-color: var(--color-primary);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.saveBtn {
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-cta);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--transition-fast);
+}
+
+.saveBtn:hover {
+  background-color: var(--color-cta-hover);
+}
+
+.cancelBtn {
+  padding: var(--space-1) var(--space-3);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border: none;
+  transition: color var(--transition-fast);
+}
+
+.cancelBtn:hover {
+  color: var(--color-text-primary);
+}

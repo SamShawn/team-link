@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { WorkspaceSidebar } from '@/components/sidebar/WorkspaceSidebar';
 import { ChannelSidebar } from '@/components/sidebar/ChannelSidebar';
 import { DMSidebar } from '@/components/sidebar/DMSidebar';
+import { MessageList } from '@/components/chat';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -39,13 +40,8 @@ export default function Home() {
 
       {/* Main message area */}
       <main className={styles.main}>
-        <div className={styles.welcome}>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)', marginBottom: '8px' }}>
-            TeamLink
-          </h1>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-            Select a channel or DM to start messaging
-          </p>
+        <div className={styles.messageArea}>
+          <MessageList />
         </div>
       </main>
     </div>
