@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { clsx } from 'clsx';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Paperclip, AtSign, Smile } from 'lucide-react';
 
 interface ComposerProps {
@@ -9,6 +8,7 @@ interface ComposerProps {
   placeholder?: string;
   disabled?: boolean;
   onTyping?: () => void;
+  onStopTyping?: () => void;
 }
 
 export function Composer({
@@ -16,10 +16,20 @@ export function Composer({
   placeholder = 'Type a message...',
   disabled = false,
   onTyping,
+  onStopTyping,
 }: ComposerProps) {
   const [content, setContent] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -36,18 +46,22 @@ export function Composer({
       }
       onTyping();
       typingTimeoutRef.current = setTimeout(() => {
-        // Stop typing indicator
+        onStopTyping?.();
       }, 2000);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (content.trim() && !disabled) {
       onSend(content.trim());
       setContent('');
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      onStopTyping?.();
       textareaRef.current?.focus();
     }
-  };
+  }, [content, disabled, onSend, onStopTyping]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -56,73 +70,12 @@ export function Composer({
     }
   };
 
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'flex-end',
-    gap: '8px',
-    padding: '12px 16px',
-    background: '#FFFFFF',
-    borderTop: '1px solid #E5E7EB',
-    minHeight: '56px',
-  };
-
-  const textareaStyle: React.CSSProperties = {
-    flex: 1,
-    minHeight: '24px',
-    maxHeight: '200px',
-    padding: '8px 12px',
-    border: '1px solid #E5E7EB',
-    borderRadius: '8px',
-    fontSize: '15px',
-    fontFamily: 'inherit',
-    color: '#111827',
-    background: '#FFFFFF',
-    outline: 'none',
-    resize: 'none',
-    lineHeight: 1.5,
-    transition: 'border-color 100ms, box-shadow 100ms',
-  };
-
-  const iconButtonStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '36px',
-    height: '36px',
-    border: 'none',
-    background: 'transparent',
-    borderRadius: '8px',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    color: disabled ? '#D1D5DB' : '#6B7280',
-    transition: 'all 100ms',
-  };
-
-  const sendButtonStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '36px',
-    height: '36px',
-    border: 'none',
-    background: content.trim() ? '#6366F1' : '#F3F4F6',
-    borderRadius: '8px',
-    cursor: content.trim() && !disabled ? 'pointer' : 'not-allowed',
-    color: content.trim() && !disabled ? '#FFFFFF' : '#9CA3AF',
-    transition: 'all 100ms',
-  };
-
   return (
-    <div style={containerStyle}>
+    <div className="flex items-end gap-2 px-4 py-3 bg-white border-t border-gray-200 min-h-14">
       <button
-        style={iconButtonStyle}
         disabled={disabled}
         aria-label="Attach file"
-        onMouseEnter={(e) => {
-          if (!disabled) e.currentTarget.style.background = '#F3F4F6';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-        }}
+        className="flex items-center justify-center w-9 h-9 border-none bg-transparent rounded-lg cursor-pointer text-gray-500 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
       >
         <Paperclip size={20} />
       </button>
@@ -134,57 +87,33 @@ export function Composer({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        style={textareaStyle}
         rows={1}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = '#6366F1';
-          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.25)';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = '#E5E7EB';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className="flex-1 min-h-6 max-h-48 py-2 px-3 border border-gray-200 rounded-lg text-sm font-inherit text-gray-900 bg-white outline-none resize-none leading-6 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
       />
 
       <button
-        style={iconButtonStyle}
         disabled={disabled}
         aria-label="Insert mention"
-        onMouseEnter={(e) => {
-          if (!disabled) e.currentTarget.style.background = '#F3F4F6';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-        }}
+        className="flex items-center justify-center w-9 h-9 border-none bg-transparent rounded-lg cursor-pointer text-gray-500 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
       >
         <AtSign size={20} />
       </button>
 
       <button
-        style={iconButtonStyle}
         disabled={disabled}
         aria-label="Add emoji"
-        onMouseEnter={(e) => {
-          if (!disabled) e.currentTarget.style.background = '#F3F4F6';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-        }}
+        className="flex items-center justify-center w-9 h-9 border-none bg-transparent rounded-lg cursor-pointer text-gray-500 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:text-gray-300"
       >
         <Smile size={20} />
       </button>
 
       <button
-        style={sendButtonStyle}
         onClick={handleSubmit}
         disabled={!content.trim() || disabled}
         aria-label="Send message"
-        onMouseEnter={(e) => {
-          if (content.trim() && !disabled) e.currentTarget.style.background = '#4F46E5';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = content.trim() ? '#6366F1' : '#F3F4F6';
-        }}
+        className="flex items-center justify-center w-9 h-9 border-none rounded-lg transition-colors disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-300 cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700"
       >
         <Send size={18} />
       </button>

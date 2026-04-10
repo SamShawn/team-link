@@ -1,16 +1,19 @@
+/* eslint-disable react/no-danger */
 'use client';
 
-import React, { useState } from 'react';
-import { clsx } from 'clsx';
+import React, { useState, useMemo, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { MoreHorizontal, Smile, Reply, Edit2, Trash2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Dropdown } from '../ui/Dropdown';
-import type { Message as MessageType, User, Reaction } from '@teamlink/shared/types';
+import type { Message as MessageType, User } from '@teamlink/shared/types';
 import { formatDistanceToNow } from 'date-fns';
+import { clsx } from 'clsx';
 
 interface MessageProps {
   message: MessageType;
   author: User;
+  currentUserId: string;
   isGrouped?: boolean;
   showActions?: boolean;
   onReact?: (emoji: string) => void;
@@ -20,18 +23,22 @@ interface MessageProps {
   isOwn?: boolean;
 }
 
-const reactionColors: Record<string, string> = {
-  '👍': '#3B82F6',
-  '❤️': '#EF4444',
-  '😂': '#F59E0B',
-  '😮': '#8B5CF6',
-  '😢': '#06B6D4',
-  '🎉': '#10B981',
-};
+const quickReactions = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
-export function Message({
+const reactionBadgeClasses = (
+  hasReacted: boolean
+): string =>
+  clsx(
+    'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm cursor-pointer transition-all duration-100',
+    hasReacted
+      ? 'bg-indigo-50 border border-indigo-500 text-indigo-600'
+      : 'bg-gray-100 border border-transparent text-gray-600 hover:bg-gray-200'
+  );
+
+export const Message = React.memo(function Message({
   message,
   author,
+  currentUserId,
   isGrouped = false,
   showActions = true,
   onReact,
@@ -43,168 +50,62 @@ export function Message({
   const [isHovered, setIsHovered] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
 
-  const quickReactions = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
+  const formattedTime = useMemo(
+    () => formatDistanceToNow(new Date(message.createdAt), { addSuffix: false }),
+    [message.createdAt]
+  );
 
-  const handleReaction = (emoji: string) => {
+  // XSS protection: sanitize HTML content
+  const sanitizedContent = useMemo(
+    () => DOMPurify.sanitize(message.content, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre'] }),
+    [message.content]
+  );
+
+  const handleReaction = useCallback((emoji: string) => {
     onReact?.(emoji);
     setShowReactionPicker(false);
-  };
-
-  const formatTime = (date: Date) => {
-    return formatDistanceToNow(new Date(date), { addSuffix: false });
-  };
-
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '12px',
-    padding: isGrouped ? '2px 16px' : '8px 16px',
-    transition: 'background 50ms',
-    background: isHovered ? '#F9FAFB' : 'transparent',
-    cursor: 'default',
-  };
-
-  const avatarContainerStyle: React.CSSProperties = {
-    width: '36px',
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'flex-start',
-  };
-
-  const contentStyle: React.CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: '8px',
-    marginBottom: isGrouped ? '0' : '4px',
-  };
-
-  const authorNameStyle: React.CSSProperties = {
-    fontWeight: 500,
-    fontSize: '15px',
-    color: '#111827',
-  };
-
-  const timestampStyle: React.CSSProperties = {
-    fontSize: '11px',
-    color: '#9CA3AF',
-    letterSpacing: '0.02em',
-  };
-
-  const bodyStyle: React.CSSProperties = {
-    fontSize: '15px',
-    lineHeight: 1.6,
-    color: '#374151',
-    wordWrap: 'break-word',
-  };
-
-  const reactionsStyle: React.CSSProperties = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '4px',
-    marginTop: '6px',
-  };
-
-  const reactionBadgeStyle = (hasReacted: boolean, emojiColor?: string): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '2px 8px',
-    borderRadius: '12px',
-    fontSize: '13px',
-    cursor: 'pointer',
-    transition: 'all 100ms',
-    background: hasReacted ? '#EEF2FF' : '#F3F4F6',
-    border: `1px solid ${hasReacted ? '#6366F1' : 'transparent'}`,
-    color: hasReacted ? '#4F46E5' : '#4B5563',
-  });
-
-  const actionsStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: isGrouped ? '-16px' : '4px',
-    right: '16px',
-    display: 'flex',
-    gap: '2px',
-    padding: '4px',
-    background: '#FFFFFF',
-    borderRadius: '6px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    border: '1px solid #E5E7EB',
-    opacity: isHovered && showActions ? 1 : 0,
-    transition: 'opacity 100ms',
-  };
-
-  const actionButtonStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '28px',
-    height: '28px',
-    border: 'none',
-    background: 'transparent',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    color: '#6B7280',
-    transition: 'all 50ms',
-  };
-
-  const reactionPickerStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '-40px',
-    left: '0',
-    display: 'flex',
-    gap: '2px',
-    padding: '6px',
-    background: '#FFFFFF',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04)',
-    border: '1px solid #E5E7EB',
-    zIndex: 10,
-  };
-
-  const messageGroupStyle: React.CSSProperties = {
-    position: 'relative',
-  };
+  }, [onReact]);
 
   return (
     <div
-      style={messageGroupStyle}
+      className={clsx(
+        'relative px-4 py-1 transition-colors duration-100',
+        isHovered ? 'bg-gray-50' : 'bg-transparent'
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setShowReactionPicker(false);
       }}
     >
+      {/* Action buttons */}
       {showActions && (
-        <div style={actionsStyle} className="message-actions">
+        <div
+          className={clsx(
+            'absolute top-0 right-4 flex gap-0.5 p-1 bg-white rounded-md shadow-sm border border-gray-200 z-10 transition-opacity duration-100',
+            isHovered && showActions ? 'opacity-100' : 'opacity-0 pointer-events-none',
+            isGrouped ? '-top-4' : 'top-1'
+          )}
+        >
           <button
-            style={actionButtonStyle}
             onClick={() => setShowReactionPicker(!showReactionPicker)}
             aria-label="Add reaction"
-            onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            className="flex items-center justify-center w-7 h-7 border-none bg-transparent rounded hover:bg-gray-100 cursor-pointer text-gray-500 transition-colors"
           >
             <Smile size={16} />
           </button>
           <button
-            style={actionButtonStyle}
             onClick={onReply}
             aria-label="Reply in thread"
-            onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            className="flex items-center justify-center w-7 h-7 border-none bg-transparent rounded hover:bg-gray-100 cursor-pointer text-gray-500 transition-colors"
           >
             <Reply size={16} />
           </button>
           <Dropdown
             trigger={
               <button
-                style={actionButtonStyle}
                 aria-label="More actions"
-                onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                className="flex items-center justify-center w-7 h-7 border-none bg-transparent rounded hover:bg-gray-100 cursor-pointer text-gray-500 transition-colors"
               >
                 <MoreHorizontal size={16} />
               </button>
@@ -231,23 +132,14 @@ export function Message({
         </div>
       )}
 
+      {/* Reaction picker */}
       {showReactionPicker && (
-        <div style={reactionPickerStyle}>
+        <div className="absolute -top-10 left-0 flex gap-0.5 p-1.5 bg-white rounded-lg shadow-md border border-gray-200 z-20">
           {quickReactions.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReaction(emoji)}
-              style={{
-                fontSize: '18px',
-                padding: '4px',
-                border: 'none',
-                background: 'transparent',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                transition: 'background 50ms',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              className="text-lg p-1 border-none bg-transparent rounded cursor-pointer hover:bg-gray-100 transition-colors"
             >
               {emoji}
             </button>
@@ -255,46 +147,55 @@ export function Message({
         </div>
       )}
 
-      <div style={containerStyle}>
-        {isGrouped ? (
-          <div style={{ ...avatarContainerStyle, paddingLeft: '36px' }}>
-            <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
-              {formatTime(new Date(message.createdAt))}
-            </span>
-          </div>
-        ) : (
-          <div style={avatarContainerStyle}>
-            <Avatar src={author.avatarUrl} name={author.displayName} size={32} status={author.status} showPresence />
-          </div>
-        )}
+      {/* Message content */}
+      <div className="flex gap-3 px-4 py-2">
+        {/* Avatar / timestamp column */}
+        <div className="w-9 flex-shrink-0 flex items-start">
+          {isGrouped ? (
+            <span className="text-xs text-gray-400 pl-9">{formattedTime}</span>
+          ) : (
+            <Avatar
+              src={author.avatarUrl}
+              name={author.displayName}
+              size={32}
+              status={author.status}
+              showPresence
+            />
+          )}
+        </div>
 
-        <div style={contentStyle}>
+        {/* Message body */}
+        <div className="flex-1 min-w-0">
+          {/* Header */}
           {!isGrouped && (
-            <div style={headerStyle}>
-              <span style={authorNameStyle}>{author.displayName}</span>
-              <span style={timestampStyle}>{formatTime(new Date(message.createdAt))}</span>
+            <div className="flex items-baseline gap-2 mb-0.5">
+              <span className="text-sm font-medium text-gray-900">{author.displayName}</span>
+              <span className="text-xs text-gray-400">{formattedTime}</span>
               {message.isEdited && (
-                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>(edited)</span>
+                <span className="text-xs text-gray-400">(edited)</span>
               )}
             </div>
           )}
 
+          {/* Content */}
           {message.isDeleted ? (
-            <p style={{ ...bodyStyle, fontStyle: 'italic', color: '#9CA3AF' }}>
-              This message was deleted
-            </p>
+            <p className="text-sm text-gray-400 italic">This message was deleted</p>
           ) : (
-            <p style={bodyStyle}>{message.content}</p>
+            <p
+              className="text-sm leading-relaxed text-gray-700 break-words"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            />
           )}
 
+          {/* Reactions */}
           {message.reactions.length > 0 && (
-            <div style={reactionsStyle}>
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {message.reactions.map((reaction) => {
-                const hasReacted = reaction.userIds.includes('current-user');
+                const hasReacted = reaction.userIds.includes(currentUserId);
                 return (
                   <span
                     key={reaction.emoji}
-                    style={reactionBadgeStyle(hasReacted, reactionColors[reaction.emoji])}
+                    className={reactionBadgeClasses(hasReacted)}
                   >
                     {reaction.emoji} {reaction.count}
                   </span>
@@ -306,4 +207,16 @@ export function Message({
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison for React.memo to prevent unnecessary re-renders
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.message.isEdited === nextProps.message.isEdited &&
+    prevProps.message.isDeleted === nextProps.message.isDeleted &&
+    prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    prevProps.author.id === nextProps.author.id &&
+    prevProps.currentUserId === nextProps.currentUserId &&
+    prevProps.isGrouped === nextProps.isGrouped
+  );
+});

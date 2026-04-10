@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useChatStore } from '../stores/chatStore';
 import {
   workspace,
@@ -91,7 +92,7 @@ export default function HomePage() {
 
   const handleSendMessage = useCallback((content: string) => {
     const newMessage: MessageType = {
-      id: `msg-${Date.now()}`,
+      id: uuidv4(),
       channelId: activeChannelId || activeDMId || '',
       threadId: null,
       authorId: currentUser.id,
@@ -116,6 +117,10 @@ export default function HomePage() {
 
   const handleTyping = useCallback(() => {
     setTyping(activeChannelId || null, activeDMId || null, currentUser.id, true);
+  }, [activeChannelId, activeDMId, currentUser.id, setTyping]);
+
+  const handleStopTyping = useCallback(() => {
+    setTyping(activeChannelId || null, activeDMId || null, currentUser.id, false);
   }, [activeChannelId, activeDMId, currentUser.id, setTyping]);
 
   const dmUsersWithIds = directMessages.map((dm) => ({
@@ -232,6 +237,7 @@ export default function HomePage() {
                         <Message
                           message={msg}
                           author={group.author}
+                          currentUserId={currentUser.id}
                           isGrouped={!isFirstInGroup}
                           isOwn={msg.authorId === currentUser.id}
                           onReact={(emoji) => handleReaction(msg.id, emoji)}
@@ -276,6 +282,7 @@ export default function HomePage() {
               : 'Type a message...'
           }
           onTyping={handleTyping}
+          onStopTyping={handleStopTyping}
         />
       </div>
     </div>
